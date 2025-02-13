@@ -1,0 +1,32 @@
+# hashicorp
+# export TF_VAR_hcp_vault_api_token=""
+# export TF_VAR_tf_organization=""
+# export TF_VAR_tf_workspace=""
+# export TF_VAR_tf_api_token=""
+
+# hetzner
+export TF_VAR_hcloud_token="" # create a read/write api token in your hcloud console -> find at https://console.hetzner.cloud/projects/<proj-id>/security/tokens
+export TF_VAR_hcloud_server_type="" # choose type by compute capacity needs + pricing at https://www.hetzner.com/cloud/#pricing
+export TF_VAR_hcloud_location="" # choose region closest to you -> find at https://docs.hetzner.com/cloud/general/locations
+export TF_VAR_vps_hostname=""  # server username (i.g. admin, your-name..)
+
+# cloudflare vars
+export TF_VAR_cf_auth_token=""
+export TF_VAR_cf_account_id=""
+export TF_VAR_vps_domain=""
+export TF_VAR_cf_access_vps_name=""
+export TF_VAR_cf_access_email=""
+export TF_VAR_cf_tunnel_token=""
+
+# nextjs client-side vars (public)
+export NEXT_PUBLIC_CLERK_FRONTEND_API="" # auth service (i.g. your-clerk-frontend-api-url)
+export NEXT_PUBLIC_SUPABASE_URL="" # db service (i.g. https://your-project-id.supabase.co)
+
+# nextjs server-side vars (private)
+export STRIPE_SECRET_KEY=""
+export STRIPE_PUBLIC_KEY=""
+export STRIPE_WEBHOOK_SECRET=""
+export SUPABASE_ANON_KEY=""
+export DATABASE_URL="" # for prisma (i.g. postgresql://user:password@hostname:5432/dbname?schema=public)
+export CLERK_API_KEY=""
+export CLERK_API_VERSION="v2" # (i.g. v2)

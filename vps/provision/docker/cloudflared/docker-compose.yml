@@ -1,0 +1,17 @@
+services:
+  tunnel:
+    container_name: cloudflared-tunnel
+    image: cloudflare/cloudflared:2025.2.1
+    restart: unless-stopped
+    environment:
+      - TF_VAR_cf_tunnel_token=TUNNEL_TOKEN
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+    network_mode: host
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

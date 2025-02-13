@@ -1,0 +1,30 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: always
+    ports:
+      - 80:80/tcp # http
+      - 443:443/tcp # https
+    environment:
+      - DOCKER_VOLUME_STORAGE=${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}
+      - TF_VAR_vps_domain=VPS_DOMAIN
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # ro = read-only access to the docker.sock
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/traefik:/etc/traefik/ # put the provided traefik.yml and fileConfig.yml files at this location
+      - ${DOCKER_VOLUME_STORAGE:-/mnt/docker-volumes}/traefik/logs:/logs
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.myapp.rule=Host(`myapp.${VPS_DOMAIN}`)
+      - traefik.http.routers.api.rule=Host(`traefik.example.com`) # define the subdomain for the traefik dashboard.
+      - traefik.http.routers.api.service=api@internal # enable Traefik API.
+      - traefik.http.routers.api.middlewares=local-ipwhitelist@file,basic-auth@file # protect dashboard with basic auth and restrict access to private class subnets only
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

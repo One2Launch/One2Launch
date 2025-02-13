@@ -1,0 +1,46 @@
+#cloud-config
+
+users:
+  - name: ${vps_hostname}
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD: ALL  # requires password for sudo cmds
+    shell: /bin/bash
+    disable_root: true
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+
+# install bare metal services
+packages:
+  - ufw
+  - fail2ban
+  - docker
+  - curl
+  - sed
+  - jq
+  - git
+  - tree
+
+# enable pkg updates
+package_update: true
+package_upgrade: true
+
+# write the .env file with the values
+write_files:
+  - path: /etc/environment
+    permissions: '0644'
+    owner: ${vps_hostname}:${vps_hostname}
+    content: |
+      ${env_file_content}
+
+# run commands after initial setup
+runcmd:
+  - sudo bash -c "source /etc/environment && $(curl -fsSL https://raw.githubusercontent.com/eileectrxity/vps/main/scripts/load-env-secrets.sh)"
+  - sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/eileectrxity/vps/main/scripts/configure-sshd.sh)"
+  - sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/eileectrxity/vps/main/scripts/setup-firewalls.sh)"
+  - sudo bash -c "$(curl -fsSL https://software.virtualmin.com/gpl/scripts/virtualmin-install.sh)" -- --minimal --verbose
+  - sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/eileectrxity/vps/main/scripts/init-containers.sh)"
+  - sudo bash -c "$(curl -fsSL https://cdn.coollabs.io/coolify/install.sh)"
+  - sudo reboot
+
+# ensures system reboots after setup
+final_message: "VPS configuration successful!"

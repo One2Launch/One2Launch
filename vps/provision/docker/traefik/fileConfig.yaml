@@ -1,0 +1,93 @@
+http:
+  routers:
+    virtualmin:     # defining router for dockerized app
+      entryPoints:
+        - https
+        - http
+      rule: 'Host(`virtualmin.${VPS_DOMAIN}`)'
+      service: virtualmin
+      middlewares:
+        - "local-ipwhitelist@file"
+        - "security-headers@file" # apply security headers
+
+      coolify:     # defining router for dockerized app
+      entryPoints:
+        - https
+        - http
+      rule: 'Host(`virtualmin.${VPS_DOMAIN}`)'
+      service: virtualmin
+      middlewares:
+        - "local-ipwhitelist@file"
+        - "security-headers@file" # apply security headers
+
+  services:
+    coolify:
+      loadBalancer:
+        servers:
+          - url: "http://virtualmin_:8080"
+
+  coolify:
+      loadBalancer:
+        servers:
+          - url: "http://coolify_service:3000"
+
+  serversTransports:
+    insecureTransport:
+      insecureSkipVerify: true # allow self-signed certificates for proxied web services
+
+  # applying middleware to intercepted
+  middlewares:
+    # restrict access to local networks
+    local-ipwhitelist:
+      ipAllowList:
+        sourceRange:
+          - 127.0.0.1/32 # localhost
+          - 10.0.0.0/8 # private class A
+          - 172.16.0.0/12 # private class B
+          - 192.168.0.0/16 # private class C
+
+    # apply security headers to traffic
+    security-headers:
+      headers:
+        customResponseHeaders:
+          Server: "" # prevent version disclosure
+          X-Powered-By: "" # prevent version disclosure
+          X-Forwarded-Proto: "https"
+        sslProxyHeaders:
+          X-Forwarded-Proto: "https"
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        contentTypeNosniff: true # X-Content-Type-Options
+        customFrameOptionsValue: "SAMEORIGIN" # X-Frame-Options
+        browserXssFilter: false # X-XSS-Protection (deprecated)
+        referrerPolicy: "strict-origin-when-cross-origin" # Referrer-Policy
+        forceSTSHeader: true # HTTP-Strict-Transport-Security (HSTS)
+        stsIncludeSubdomains: true # HSTS
+        stsSeconds: 63072000 # HSTS
+        stsPreload: true # HSTS
+
+    # middleware to limit rate of requests
+    rate-limit:
+      rateLimit:
+        average: 100
+        period: 1
+        burst: 100
+
+    # basic auth middleware for dashboard access
+    basic-auth:
+      basicAuth:
+        users: "admin:$$apr1$$epoKf5li$$QfTMJZOCS/halv3CiIUEu0" # Admin:Password (hashed)
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
